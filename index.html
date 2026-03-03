@@ -168,7 +168,7 @@
         btnEnviar.disabled = true;
         btnEnviar.innerText = "Enviando reporte...";
 
-        fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+        fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
             .then(response => {
                 alert("¡Reporte enviado con éxito! Los datos ya están en la hoja de cálculo.");
                 btnEnviar.disabled = false;
@@ -187,4 +187,5 @@
     });
     </script>
 </body>
+
 </html>
