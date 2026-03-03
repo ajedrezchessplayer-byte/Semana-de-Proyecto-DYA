@@ -7,31 +7,25 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        /* Fondo general y centrado */
         body { 
             font-family: 'Segoe UI', sans-serif; 
             padding: 20px; 
-            max-width: 1000px; /* Más ancho para el PC */
+            max-width: 1000px; 
             margin: auto; 
-            background-color: #f0f2f5; /* Gris suave */
+            background-color: #f0f2f5; 
             color: #333;
         }
-
         h2 { color: #e60000; text-align: center; }
         .subtitulo { text-align: center; margin-bottom: 30px; color: #666; }
-
-        /* Tarjeta blanca del formulario */
         #formulario-dya {
             background-color: white;
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0px 10px 25px rgba(0,0,0,0.1);
         }
-
         .campo { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
         select, textarea, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        
         button { 
             background-color: #e60000; 
             color: white; 
@@ -46,22 +40,14 @@
             transition: 0.3s;
         }
         button:hover { background-color: #c40000; }
+        .btn-gps { background-color: #28a745; margin-top: 10px; padding: 10px; font-size: 0.9em; }
+        .aviso-legal { font-size: 0.75em; color: #888; margin-top: 20px; line-height: 1.4; text-align: center; }
 
-        /* Layout de dos columnas para PC */
         @media (min-width: 768px) {
-            .contenedor-flexible {
-                display: flex;
-                gap: 30px;
-            }
+            .contenedor-flexible { display: flex; gap: 30px; }
             .columna-izq, .columna-der { flex: 1; }
         }
-
-        #map { 
-            height: 400px; 
-            border-radius: 10px; 
-            border: 2px solid #eee;
-            z-index: 1; /* Para evitar problemas con otros elementos */
-        }
+        #map { height: 350px; border-radius: 10px; border: 2px solid #eee; z-index: 1; }
     </style>
 </head>
 <body>
@@ -71,7 +57,6 @@
 
     <form id="formulario-dya">
         <div class="contenedor-flexible">
-            
             <div class="columna-izq">
                 <div class="campo">
                     <label for="necesidad">¿Qué necesita principalmente?</label>
@@ -120,19 +105,23 @@
 
             <div class="columna-der">
                 <div class="campo">
-                    <label>Tu ubicación (Pulsa en el mapa):</label>
+                    <label>Tu ubicación (Pulsa el mapa o usa el GPS):</label>
                     <div id="map"></div>
+                    <button type="button" class="btn-gps" onclick="usarGPS()">Usar mi ubicación GPS actual</button>
                     <input type="hidden" id="latitud" name="latitud">
                     <input type="hidden" id="longitud" name="longitud">
                 </div>
 
                 <div class="campo">
                     <label for="descripcion">Descripción física / Situación:</label>
-                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Ej: Hombre, unos 50 años, chaqueta azul..."></textarea>
+                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Hombre/Mujer, de ... años, ropa clara/oscura ..."></textarea>
                 </div>
             </div>
-
         </div>
+
+        <p class="aviso-legal">
+            <b>Aviso:</b> Este reporte es anónimo. Por favor, use esta herramienta con responsabilidad para ayudar a quienes más lo necesitan.
+        </p>
 
         <button type="submit" id="btn-enviar">Enviar reporte a DYA</button>
     </form>
@@ -140,53 +129,67 @@
     <script>
         // Configuración del Mapa
         var map = L.map('map').setView([39.476, -6.372], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
         }).addTo(map);
 
         var marker = L.marker([39.476, -6.372], {draggable: true}).addTo(map);
 
         function actualizarCoordenadas(lat, lng) {
-            document.getElementById('latitud').value = lat.toFixed(6);
-            document.getElementById('longitud').value = lng.toFixed(6);
+            document.getElementById('latitud').value = parseFloat(lat).toFixed(6);
+            document.getElementById('longitud').value = parseFloat(lng).toFixed(6);
         }
 
+        // Inicializar
         actualizarCoordenadas(39.476, -6.372);
 
+        // Click en mapa
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             actualizarCoordenadas(e.latlng.lat, e.latlng.lng);
         });
-		
-		// --- BLOQUE NUEVO: Envío a Google Sheets ---
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxD_QDVERNcyN4n8GdHS9v123jAciy-m8_csw8BK9zStOikWHX-QKjXA5EbdaVa6oRD/exec'; // <--- PEGA AQUÍ TU URL DE PASO 2
-    const form = document.getElementById('formulario-dya');
-    const btnEnviar = document.getElementById('btn-enviar');
 
-    form.addEventListener('submit', e => {
-        e.preventDefault(); // Evita que la página se recargue
-        btnEnviar.disabled = true;
-        btnEnviar.innerText = "Enviando reporte...";
+        // Función GPS
+        function usarGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(p) {
+                    var lat = p.coords.latitude;
+                    var lng = p.coords.longitude;
+                    marker.setLatLng([lat, lng]);
+                    map.setView([lat, lng], 17);
+                    actualizarCoordenadas(lat, lng);
+                }, function() { 
+                    alert("No se pudo acceder a tu ubicación. Asegúrate de dar permisos al navegador."); 
+                });
+            }
+        }
 
-        fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
-            .then(response => {
-                alert("¡Reporte enviado con éxito! Los datos ya están en la hoja de cálculo.");
-                btnEnviar.disabled = false;
-                btnEnviar.innerText = "Enviar reporte a DYA";
-                form.reset(); // Limpia el formulario
-                // Devolvemos el marcador al centro de Cáceres
-                marker.setLatLng([39.476, -6.372]);
-                actualizarCoordenadas(39.476, -6.372);
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                alert("Error al enviar. Revisa la URL o tu conexión.");
-                btnEnviar.disabled = false;
-                btnEnviar.innerText = "Enviar reporte a DYA";
-            });
-    });
+        // Envío de datos
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxCYAC4RFBLlO8C6hbCg-WABoGvmZS1S2-gP0PXCJejdxjciqJkNuEUuSDm600Q1Jxa/exec';
+        const form = document.getElementById('formulario-dya');
+        const btnEnviar = document.getElementById('btn-enviar');
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            btnEnviar.disabled = true;
+            btnEnviar.innerText = "Enviando reporte...";
+
+            fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
+                .then(() => {
+                    alert("¡Reporte enviado con éxito! Gracias por tu colaboración.");
+                    btnEnviar.disabled = false;
+                    btnEnviar.innerText = "Enviar reporte a DYA";
+                    form.reset();
+                    marker.setLatLng([39.476, -6.372]);
+                    actualizarCoordenadas(39.476, -6.372);
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
+                    alert("Hubo un error al enviar. Revisa tu conexión.");
+                    btnEnviar.disabled = false;
+                    btnEnviar.innerText = "Enviar reporte a DYA";
+                });
+        });
     </script>
 </body>
-
 </html>
-
