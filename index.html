@@ -105,34 +105,41 @@
 
             <div class="columna-der">
                 <div class="campo">
-                    <label>Tu ubicación (Pulsa el mapa o usa el GPS):</label>
+                    <label>Ubicación (Pulsa el mapa o usa el GPS):</label>
                     <div id="map"></div>
                     <button type="button" class="btn-gps" onclick="usarGPS()">Usar mi ubicación GPS actual</button>
                     <input type="hidden" id="latitud" name="latitud">
                     <input type="hidden" id="longitud" name="longitud">
+                    <input type="hidden" id="ip_remota" name="ip_remota" value="Detectando...">
                 </div>
 
                 <div class="campo">
                     <label for="descripcion">Descripción física / Situación:</label>
-                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Hombre/Mujer, de ... años, ropa clara/oscura ..."></textarea>
+                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Ej: Hombre, unos 50 años, chaqueta azul..."></textarea>
                 </div>
             </div>
         </div>
 
         <p class="aviso-legal">
-            <b>Aviso:</b> Este reporte es anónimo. Por favor, use esta herramienta con responsabilidad para ayudar a quienes más lo necesitan.
+            <b>Aviso de seguridad:</b> Para evitar reportes falsos, se registrará la dirección IP del dispositivo. El uso indebido será notificado a las autoridades.
         </p>
 
         <button type="submit" id="btn-enviar">Enviar reporte a DYA</button>
     </form>
 
     <script>
-        // Configuración del Mapa
-        var map = L.map('map').setView([39.476, -6.372], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-            attribution: '© OpenStreetMap' 
-        }).addTo(map);
+        // --- CAPTURA DE IP ---
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('ip_remota').value = data.ip;
+                console.log("IP Lista: " + data.ip);
+            })
+            .catch(() => { document.getElementById('ip_remota').value = "IP no disponible"; });
 
+        // --- CONFIGURACIÓN MAPA ---
+        var map = L.map('map').setView([39.476, -6.372], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
         var marker = L.marker([39.476, -6.372], {draggable: true}).addTo(map);
 
         function actualizarCoordenadas(lat, lng) {
@@ -140,16 +147,13 @@
             document.getElementById('longitud').value = parseFloat(lng).toFixed(6);
         }
 
-        // Inicializar
         actualizarCoordenadas(39.476, -6.372);
 
-        // Click en mapa
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             actualizarCoordenadas(e.latlng.lat, e.latlng.lng);
         });
 
-        // Función GPS
         function usarGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(p) {
@@ -158,25 +162,24 @@
                     marker.setLatLng([lat, lng]);
                     map.setView([lat, lng], 17);
                     actualizarCoordenadas(lat, lng);
-                }, function() { 
-                    alert("No se pudo acceder a tu ubicación. Asegúrate de dar permisos al navegador."); 
-                });
+                }, function() { alert("GPS no disponible"); });
             }
         }
 
-        // Envío de datos
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxCYAC4RFBLlO8C6hbCg-WABoGvmZS1S2-gP0PXCJejdxjciqJkNuEUuSDm600Q1Jxa/exec';
+        // --- ENVÍO ---
+        // URL Corregida (comilla cerrada)
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxRWKNb4qBzoUfVxsU_rIBXBr15aZSJR8dI59VO53sc_2gObzYtRcVjxhtD67sBfJXa/exec';
         const form = document.getElementById('formulario-dya');
         const btnEnviar = document.getElementById('btn-enviar');
 
         form.addEventListener('submit', e => {
             e.preventDefault();
             btnEnviar.disabled = true;
-            btnEnviar.innerText = "Enviando reporte...";
+            btnEnviar.innerText = "Enviando...";
 
             fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
                 .then(() => {
-                    alert("¡Reporte enviado con éxito! Gracias por tu colaboración.");
+                    alert("¡Reporte enviado! IP registrada.");
                     btnEnviar.disabled = false;
                     btnEnviar.innerText = "Enviar reporte a DYA";
                     form.reset();
@@ -184,10 +187,8 @@
                     actualizarCoordenadas(39.476, -6.372);
                 })
                 .catch(error => {
-                    console.error('Error!', error.message);
-                    alert("Hubo un error al enviar. Revisa tu conexión.");
+                    alert("Error en el envío.");
                     btnEnviar.disabled = false;
-                    btnEnviar.innerText = "Enviar reporte a DYA";
                 });
         });
     </script>
