@@ -74,13 +74,13 @@
                     <select id="urgencia" name="urgencia">
                         <option value="baja">Baja (Solo información)</option>
                         <option value="media">Media (Necesita atención hoy)</option>
-                        <option value="alta">Alta (Situación crítica / Frío extremo)</option>
+                        <option value="alta">Alta (Situación crítica)</option>
                     </select>
                 </div>
 
                 <div class="campo">
                     <label for="num_personas">Número de Personas:</label>
-                    <input type="number" id="num_personas" name="num_personas" min="1" value="1">
+                    <input type="number" id="num_personas" name="num_personas" min="1" max="5" value="1">
                 </div>
 
                 <div class="campo">
@@ -105,7 +105,7 @@
 
             <div class="columna-der">
                 <div class="campo">
-                    <label>Ubicación (Pulsa el mapa o usa el GPS):</label>
+                    <label>Tu ubicación (Pulsa el mapa o usa el GPS):</label>
                     <div id="map"></div>
                     <button type="button" class="btn-gps" onclick="usarGPS()">Usar mi ubicación GPS actual</button>
                     <input type="hidden" id="latitud" name="latitud">
@@ -114,14 +114,14 @@
                 </div>
 
                 <div class="campo">
-                    <label for="descripcion">Descripción física / Situación:</label>
-                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Ej: Hombre, unos 50 años, chaqueta azul..."></textarea>
+                    <label for="descripcion">Descripción física:</label>
+                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Hombre/Mujer, ... años, ropa clara/oscura..."></textarea>
                 </div>
             </div>
         </div>
 
         <p class="aviso-legal">
-            <b>Aviso de seguridad:</b> Para evitar reportes falsos, se registrará la dirección IP del dispositivo. El uso indebido será notificado a las autoridades.
+            <b>Aviso de seguridad:</b> Para evitar reportes falsos, se registrará la dirección IP del dispositivo. El uso indebido de esta interfaz será notificado a la policía
         </p>
 
         <button type="submit" id="btn-enviar">Enviar reporte a DYA</button>
@@ -194,4 +194,5 @@
     </script>
 </body>
 </html>
+
 
